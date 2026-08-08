@@ -179,10 +179,12 @@
   .item-label{padding:8px 10px; font-size:0.82rem; font-weight:700; color:var(--maroon-deep); line-height:1.25;}
   .item-label small{display:block; font-weight:400; color:var(--ink-soft); margin-top:2px;}
   .upload-btn{
-    display:block; width:calc(100% - 16px); margin:0 8px 8px 8px;
+    display:none;
+    width:calc(100% - 16px); margin:0 8px 8px 8px;
     background:var(--forest); color:#fff; border:none; border-radius:8px;
     font-size:0.72rem; padding:6px; cursor:pointer; font-family:'Baloo 2', sans-serif;
   }
+  body.owner-mode .upload-btn{display:block;}
   .upload-result{
     margin:0 8px 8px 8px; font-size:0.62rem; word-break:break-all;
     background:#fff; border:1px dashed var(--ink-soft); border-radius:6px; padding:4px 6px;
@@ -254,6 +256,12 @@ document.getElementById('gateInput').addEventListener('keydown', (e)=>{
 if(localStorage.getItem('mackiAuthed') === 'true'){
   document.body.classList.remove('locked');
   document.getElementById('gate').style.display = 'none';
+}
+
+/* ---------- Owner-only tools ---------- */
+/* Visit with ?owner=1 on the end of the URL to see upload buttons. Sitters won't see this. */
+if(new URLSearchParams(window.location.search).get('owner') === '1'){
+  document.body.classList.add('owner-mode');
 }
 
 /* ---------- Tabs ---------- */
