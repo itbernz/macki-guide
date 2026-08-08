@@ -12,7 +12,7 @@
 <script>
   // Change this to update the site password. Plain text on purpose,
   // so you can edit it right here without needing any tools.
-  const SITE_PASSWORD = "kellymacki2026";
+  const SITE_PASSWORD = "macki2026";
 
   // Paste Cloudinary image URLs here once you've uploaded photos
   // (use the "Get upload link" button on the live site, or Cloudinary directly)
@@ -243,6 +243,7 @@ function checkPassword(){
   if(val === SITE_PASSWORD){
     localStorage.setItem('mackiAuthed', 'true');
     document.body.classList.remove('locked');
+    document.getElementById('gate').style.display = 'none';
   } else {
     document.getElementById('gateError').textContent = 'Wrong password, try again.';
   }
@@ -252,6 +253,7 @@ document.getElementById('gateInput').addEventListener('keydown', (e)=>{
 });
 if(localStorage.getItem('mackiAuthed') === 'true'){
   document.body.classList.remove('locked');
+  document.getElementById('gate').style.display = 'none';
 }
 
 /* ---------- Tabs ---------- */
