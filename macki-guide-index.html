@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macki & House Guide</title>
+<style>
+  /* ============================================================
+     OWNER SETTINGS - edit these directly on github.com
+     ============================================================ */
+</style>
+<script>
+  // Change this to update the site password. Plain text on purpose,
+  // so you can edit it right here without needing any tools.
+  const SITE_PASSWORD = "macki2026";
+
+  // Paste Cloudinary image URLs here once you've uploaded photos
+  // (use the "Get upload link" button on the live site, or Cloudinary directly)
+  const ITEM_PHOTOS = {
+    lickymat: "",
+    kong: "",
+    wobble: "",
+    tprolls: "",
+    towel: "",
+    redball: "",
+    bone: "",
+    tub: ""
+  };
+
+  // Paste your automation/NFC trigger links here
+  const HOUSE_BUTTON_URLS = {
+    musicon: "",
+    musicoff: "",
+    lightson: "",
+    lightsoff: ""
+  };
+
+  // Reused from the Hit Fits app
+  const CLOUDINARY_CLOUD_NAME = "dyodggss1q";
+  const CLOUDINARY_UPLOAD_PRESET = "hit-fits";
+</script>
+<style>
+  :root{
+    --mustard:#F2B705;
+    --mustard-soft:#FDE7A8;
+    --maroon:#7B2D26;
+    --maroon-deep:#5C1F1A;
+    --forest:#33613F;
+    --forest-soft:#DCEBDD;
+    --cream:#FFF8EC;
+    --ink:#2B2118;
+    --ink-soft:#6B5C4C;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  h1,h2,h3{font-family:'Baloo 2', 'Segoe UI', sans-serif; font-weight:700;}
+
+  /* Password gate */
+  #gate{
+    position:fixed; inset:0; z-index:100;
+    background:var(--maroon);
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    padding:24px;
+    text-align:center;
+  }
+  #gate .paw{font-size:2.4rem; margin-bottom:6px;}
+  #gate h1{color:var(--white); font-size:1.4rem; margin:0 0 18px 0;}
+  #gate input{
+    font-size:1rem;
+    padding:12px 16px;
+    border-radius:12px;
+    border:none;
+    width:100%;
+    max-width:260px;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  #gate button{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+    background:var(--mustard);
+    color:var(--maroon-deep);
+    border:none;
+    border-radius:999px;
+    padding:12px 28px;
+    cursor:pointer;
+  }
+  #gate .error{color:var(--mustard); font-size:0.85rem; margin-top:10px; min-height:1.2em;}
+  body.locked > *:not(#gate){display:none;}
+
+  /* Header */
+  header{
+    background:var(--maroon);
+    color:var(--white);
+    padding:22px 18px 60px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  header .blob{position:absolute; border-radius:50%; opacity:0.18; background:var(--mustard);}
+  header .blob.b1{width:180px;height:180px;top:-90px;right:-40px;}
+  header .blob.b2{width:120px;height:120px;bottom:-70px;left:20%;}
+  .header-row{display:flex; align-items:center; gap:14px; position:relative; z-index:2;}
+  .paw-icon{
+    width:52px;height:52px; background:var(--mustard); border-radius:16px;
+    display:flex;align-items:center;justify-content:center; font-size:26px; flex-shrink:0;
+  }
+  header h1{margin:0; font-size:1.7rem; line-height:1.1;}
+  header .subtitle{margin:2px 0 0 0; font-size:0.88rem; opacity:0.85;}
+  .quickfacts{position:relative; z-index:2; margin-top:16px; display:flex; flex-wrap:wrap; gap:8px;}
+  .qf-pill{
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3);
+    padding:5px 12px; border-radius:999px; font-size:0.78rem;
+  }
+
+  /* Tabs */
+  .tabbar{
+    display:flex; overflow-x:auto; gap:6px; padding:10px 12px;
+    margin-top:-38px; position:relative; z-index:3; scrollbar-width:none;
+  }
+  .tabbar::-webkit-scrollbar{display:none;}
+  .tab-btn{
+    flex:0 0 auto; background:var(--white); border:2px solid transparent;
+    color:var(--maroon-deep); font-family:'Baloo 2', sans-serif; font-weight:600;
+    font-size:0.86rem; padding:10px 14px; border-radius:14px;
+    box-shadow:0 2px 6px rgba(91,31,26,0.12); cursor:pointer; white-space:nowrap;
+  }
+  .tab-btn.active{background:var(--mustard); border-color:var(--maroon-deep); color:var(--maroon-deep);}
+
+  main{max-width:640px; margin:0 auto; padding:6px 16px 0 16px;}
+  .panel{display:none;}
+  .panel.active{display:block; animation:fade .18s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .card{
+    background:var(--white); border-radius:18px; padding:18px 18px 16px 18px;
+    margin-bottom:16px; box-shadow:0 2px 10px rgba(43,33,24,0.06);
+    border:1px solid rgba(123,45,38,0.08);
+  }
+  .card h2{margin:0 0 10px 0; font-size:1.15rem; color:var(--maroon); display:flex; align-items:center; gap:8px;}
+  .card p{margin:6px 0; line-height:1.5; font-size:0.94rem;}
+  .card ul{margin:6px 0; padding-left:20px;}
+  .card li{margin-bottom:5px; line-height:1.45; font-size:0.94rem;}
+
+  .banner{background:var(--forest-soft); border-left:4px solid var(--forest); padding:10px 14px; border-radius:10px; font-size:0.9rem; margin:10px 0;}
+  .banner.warn{background:#FBEAEA; border-left-color:var(--maroon);}
+  .banner.note{background:var(--mustard-soft); border-left-color:var(--mustard);}
+
+  .contact-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #F0E9DA; font-size:0.94rem;}
+  .contact-row:last-child{border-bottom:none;}
+  .contact-row a{color:var(--maroon); font-weight:700; text-decoration:none;}
+  .contact-name{font-weight:600;}
+  .contact-sub{color:var(--ink-soft); font-size:0.82rem; display:block;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:420px){.grid2{grid-template-columns:1fr;}}
+  .minicard{background:var(--cream); border-radius:12px; padding:10px 12px; font-size:0.88rem;}
+  .minicard b{display:block; margin-bottom:3px; color:var(--maroon);}
+  .editme{font-style:italic; color:#B0532F; font-size:0.82rem;}
+
+  /* Item grid */
+  .item-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;}
+  .item-card{background:var(--cream); border-radius:14px; overflow:hidden; border:1px solid rgba(123,45,38,0.08);}
+  .item-photo{
+    width:100%; aspect-ratio:1/1; background:var(--mustard-soft);
+    background-size:cover; background-position:center;
+    display:flex; align-items:center; justify-content:center;
+    font-size:2.1rem; color:var(--maroon); position:relative;
+  }
+  .item-label{padding:8px 10px; font-size:0.82rem; font-weight:700; color:var(--maroon-deep); line-height:1.25;}
+  .item-label small{display:block; font-weight:400; color:var(--ink-soft); margin-top:2px;}
+  .upload-btn{
+    display:block; width:calc(100% - 16px); margin:0 8px 8px 8px;
+    background:var(--forest); color:#fff; border:none; border-radius:8px;
+    font-size:0.72rem; padding:6px; cursor:pointer; font-family:'Baloo 2', sans-serif;
+  }
+  .upload-result{
+    margin:0 8px 8px 8px; font-size:0.62rem; word-break:break-all;
+    background:#fff; border:1px dashed var(--ink-soft); border-radius:6px; padding:4px 6px;
+    display:none;
+  }
+  .upload-result.show{display:block;}
+
+  /* House buttons */
+  .button-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .house-btn-card{background:var(--cream); border-radius:16px; padding:14px; text-align:center;}
+  .house-btn{
+    width:100%; padding:16px 8px; border:none; border-radius:12px;
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:1rem; color:#fff; cursor:pointer;
+  }
+  .house-btn.music{background:var(--forest);}
+  .house-btn.lights{background:var(--maroon);}
+  .house-btn:disabled{opacity:0.45; cursor:not-allowed;}
+  .house-btn-note{font-size:0.68rem; color:var(--ink-soft); margin-top:6px;}
+
+  footer{text-align:center; color:var(--ink-soft); font-size:0.78rem; padding:22px 16px 0 16px;}
+</style>
+</head>
+<body class="locked">
+
+<div id="gate">
+  <div class="paw">🐾</div>
+  <h1>Macki & House Guide</h1>
+  <input type="password" id="gateInput" placeholder="Password" autocomplete="off">
+  <button onclick="checkPassword()">Enter</button>
+  <div class="error" id="gateError"></div>
+</div>
+
+<header>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="header-row">
+    <div class="paw-icon">🐾</div>
+    <div>
+      <h1>Looking after Macki</h1>
+      <p class="subtitle">Staghound cross · 5 (ish) years old · Male</p>
+    </div>
+  </div>
+  <div class="quickfacts">
+    <span class="qf-pill">📍 Vet: Morley Vet Centre</span>
+    <span class="qf-pill">💊 Meds in the morning</span>
+    <span class="qf-pill">🧠 Separation anxiety, read Routine tab first</span>
+  </div>
+</header>
+
+<div class="tabbar" id="tabbar"></div>
+<main id="panels"></main>
+<footer>Made for Macki's sitters. Double check anything time sensitive (bin day roster, meds, contacts) is still current.</footer>
+
+<script>
+/* ---------- Password gate ---------- */
+function checkPassword(){
+  const val = document.getElementById('gateInput').value;
+  if(val === SITE_PASSWORD){
+    localStorage.setItem('mackiAuthed', 'true');
+    document.body.classList.remove('locked');
+  } else {
+    document.getElementById('gateError').textContent = 'Wrong password, try again.';
+  }
+}
+document.getElementById('gateInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') checkPassword();
+});
+if(localStorage.getItem('mackiAuthed') === 'true'){
+  document.body.classList.remove('locked');
+}
+
+/* ---------- Tabs ---------- */
+const tabs = [
+  {id:'emergency', label:'🚨 Emergency'},
+  {id:'routine', label:'🕐 Routine'},
+  {id:'food', label:'🍲 Food'},
+  {id:'meds', label:'💊 Meds'},
+  {id:'enrichment', label:'🧩 Activities'},
+  {id:'walks', label:'🦮 Walks & Gear'},
+  {id:'behaviour', label:'⚠️ Behaviour & Triggers'},
+  {id:'house', label:'🏠 House'},
+  {id:'commands', label:'🔘 House Buttons'},
+  {id:'notes', label:'📝 Notes'}
+];
+const tabbar = document.getElementById('tabbar');
+tabs.forEach((t,i)=>{
+  const b = document.createElement('button');
+  b.className = 'tab-btn' + (i===0 ? ' active' : '');
+  b.textContent = t.label;
+  b.onclick = () => showTab(t.id);
+  b.id = 'btn-' + t.id;
+  tabbar.appendChild(b);
+});
+function showTab(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.getElementById('btn-'+id).classList.add('active');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ---------- Cloudinary upload helper ---------- */
+function uploadItemPhoto(key, btnEl){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    btnEl.textContent = 'Uploading...';
+    btnEl.disabled = true;
+    try{
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if(data.secure_url){
+        const box = document.getElementById('photo-' + key);
+        box.style.backgroundImage = 'url(' + data.secure_url + ')';
+        box.querySelector('.icon-fallback')?.remove();
+        const resultEl = document.getElementById('result-' + key);
+        resultEl.textContent = data.secure_url;
+        resultEl.classList.add('show');
+        btnEl.textContent = 'Copy URL below into ITEM_PHOTOS.' + key;
+      } else {
+        btnEl.textContent = 'Upload failed, try again';
+      }
+    }catch(err){
+      btnEl.textContent = 'Upload failed, try again';
+    }
+    btnEl.disabled = false;
+  };
+  input.click();
+}
+
+/* ---------- House buttons ---------- */
+function triggerHouseButton(id){
+  const url = HOUSE_BUTTON_URLS[id];
+  if(!url){
+    alert('No link added for this button yet.');
+    return;
+  }
+  window.open(url, '_blank');
+}
+
+function itemPhotoDiv(key, icon){
+  const url = ITEM_PHOTOS[key];
+  const bg = url ? `style="background-image:url(${url})"` : '';
+  const fallback = url ? '' : `<span class="icon-fallback">${icon}</span>`;
+  return `<div class="item-photo" id="photo-${key}" ${bg}>${fallback}</div>`;
+}
+
+/* ---------- Content ---------- */
+document.getElementById('panels').innerHTML = `
+
+<section id="panel-emergency" class="panel active">
+  <div class="card">
+    <h2>🐕 Vet</h2>
+    <div class="contact-row">
+      <div><span class="contact-name">Morley Vet Centre</span><span class="contact-sub">20 Rudloc Rd, Morley WA 6062</span></div>
+      <a href="tel:0892753000">(08) 9275 3000</a>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📞 Emergency contacts</h2>
+    <div class="contact-row">
+      <div><span class="contact-name">Eleanor</span><span class="contact-sub">Nicole's sister, lives in Greenwood</span></div>
+      <a href="tel:0438201901">0438 201 901</a>
+    </div>
+    <div class="contact-row">
+      <div><span class="contact-name">Liz</span><span class="contact-sub">Bernadette's sister, lives in Lathlain</span></div>
+      <a href="tel:0420582527">0420 582 527</a>
+    </div>
+    <p class="editme">Add our direct mobile numbers here too if not already saved in your phone.</p>
+  </div>
+  <div class="card">
+    <h2>🔑 Getting in</h2>
+    <p>Keys are in a lockbox outside on the front stairs, near the bins. Code will be texted to you separately.</p>
+  </div>
+</section>
+
+<section id="panel-routine" class="panel">
+  <div class="card">
+    <h2>☀️ Morning</h2>
+    <ul>
+      <li><b>Sniff and Treat + toilet:</b> 15 to 20 minutes in the back courtyard.</li>
+      <li><b>Feeding:</b> pre prepared bowl with his medication already in it. If he doesn't eat straight away that's fine, just remind him it's there.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>🌤️ Midday</h2>
+    <ul>
+      <li>He mostly sleeps.</li>
+      <li>Optional breaks: walk, play or toilet if he seems bored. Not required.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>🌙 Evening</h2>
+    <ul>
+      <li><b>Dinner:</b> pre prepared frozen bowl, anytime between 4:30 and 6:00 PM.</li>
+      <li><b>Walk and toilet:</b> around 8 PM, not required for the sitter. If you do take him, watch for other dogs and give distance. His halti helps a lot with redirecting.</li>
+      <li><b>Wind down:</b> 5 to 10 minutes of tricks or training. He knows sit, down, spin, paw, back, middle (stand between your legs), and around (walk around your legs).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>🎧 When you're leaving him alone</h2>
+    <p>Macki has separation anxiety and struggles by himself. Before you go:</p>
+    <ul>
+      <li>Say out loud, "Alexa, 100.9FM Western Australia on the big echo" to start the radio from the kitchen device. Say "Alexa, turn the music off" when you're back.</li>
+      <li>Set up 2 to 5 food activities and a fresh bowl of water (see Activities tab).</li>
+      <li>Section off the kitchen with the gate, and close the door to the blue room. All other rooms can stay open.</li>
+      <li>Close the living room and main bedroom curtains. Other curtains and blinds are fine open. Make sure back doors are locked.</li>
+    </ul>
+    <div class="banner note">Cold night or morning? Feel free to put one of his shirts on him.</div>
+  </div>
+</section>
+
+<section id="panel-food" class="panel">
+  <div class="card">
+    <h2>🍲 What he eats</h2>
+    <p>Macki will happily eat anything. He gets some skin irritation from chicken so we avoid it, though it's not harmful if he has some. Otherwise the usual dog no-go list applies: no chocolate, grapes, onions.</p>
+    <p>Roughly 3 cups of food a day, though it's not strictly monitored. Better to have too many treats on a walk than not enough.</p>
+    <div class="grid2">
+      <div class="minicard"><b>Regular food</b>Kibble, Salmon Prime100, veggies, minced meat. Add a splash of water for unfrozen meals.</div>
+      <div class="minicard"><b>Treats</b>Beef liver biscuits, salmon bites, Prime100 cubes, frozen blueberries. Prepacked in the fridge, wet food cubes in the blue ice cream tub.</div>
+    </div>
+    <div class="banner">He's fed on his green rug in the living room. His orange water bowl is nearby, keep it topped up.</div>
+    <div class="banner warn">No food from human plates or while you're prepping food. We're training him not to beg, don't leave your own food unattended, he's an opportunist.</div>
+  </div>
+</section>
+
+<section id="panel-meds" class="panel">
+  <div class="card">
+    <h2>💊 Daily medication</h2>
+    <p><b>Zactin (fluoxetine):</b> 1 tablet with food, every morning. Usually given after Sniff and Treat, before his breakfast bowl. He doesn't love the taste so it's hidden in food.</p>
+  </div>
+  <div class="card">
+    <h2>😨 As-needed medication</h2>
+    <p><b>Chlonidine</b> (the smaller, round tablets) are for anxiety triggers, most commonly thunder. Give 1 to 2 tablets depending on how anxious he is.</p>
+    <div class="banner warn"><b>In case of thunder:</b> give him two chlonidine tablets and distract him with licking peanut butter or yoghurt.</div>
+  </div>
+</section>
+
+<section id="panel-enrichment" class="panel">
+  <div class="card">
+    <h2>🧩 Food activities</h2>
+    <p>Most of Macki's activities need food or he won't engage. Supplies are in the <b>laundry</b>: a Coles paper bag under the laundry basket with toilet rolls etc, plus spare bowls and containers. Use anything freely. We usually set up 2 to 5 activities depending how long we're out.</p>
+    <div class="item-grid" id="itemGrid"></div>
+    <p class="editme" style="margin-top:12px;">Feel free to improvise anything else you think he'd enjoy.</p>
+  </div>
+  <div class="card">
+    <h2>🎾 Other games</h2>
+    <ul>
+      <li><b>Sniff and treat:</b> sit outside and throw individual biscuits for him to find, further across the deck if you want him moving more. Works indoors too on rainy days.</li>
+      <li><b>Hide and seek (food):</b> usually indoors. Sit him, let him sniff a treat, make him wait while you hide it, then say "OK" to release him to find it.</li>
+      <li><b>Ditch the zucchini:</b> chop zucchini and throw it down the hall or outside. Messy, but he sprints for it.</li>
+      <li><b>Chasing games:</b> usually indoors. Hide in the hallway then run when you hear him coming, or sneak up on him.</li>
+    </ul>
+    <div class="banner note">During chasing games Macki can get a bit rowdy, loud barking, nudging his head into you ("full dog mode"). If you'd rather he settle, use the command "Enough" and reward with pats once he calms down.</div>
+  </div>
+</section>
+
+<section id="panel-walks" class="panel">
+  <div class="card">
+    <h2>🦮 Harness and Halti</h2>
+    <p>His walking bag (treats pouch, harness, halti, two leads) hangs on the coat rack above the shoes.</p>
+    <div class="banner warn">Please use both leads on every walk: the round lead goes on the halti, the flat lead on his back/harness.</div>
+  </div>
+  <div class="card">
+    <h2>🚶 On the walk</h2>
+    <p>Be observant of other dogs and the postie, give plenty of distance. The halti helps a lot with redirecting him if he gets excited.</p>
+  </div>
+</section>
+
+<section id="panel-behaviour" class="panel">
+  <div class="card">
+    <h2>⚠️ Good to know</h2>
+    <ul>
+      <li><b>Socialisation:</b> plays well with dogs once he knows them, but gets over excited on walks.</li>
+      <li><b>Reactivity:</b> can be startled by unexpected dogs (and the postie), leading to nervous barking.</li>
+      <li><b>Night walks:</b> less likely to run into other dogs, but not something the sitter needs to do.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>💛 After he's had a moment</h2>
+    <p>Use a licking mat or frozen treat to help him settle. Try not to leave him alone for at least an hour after any escalation, he can panic. Give chlonidine if needed (see Meds tab).</p>
+  </div>
+  <div class="card">
+    <h2>😴 Little things</h2>
+    <p>He likes his blanket over his head when sleeping or relaxing, totally normal for him.</p>
+  </div>
+</section>
+
+<section id="panel-house" class="panel">
+  <div class="card">
+    <h2>💡 Lights</h2>
+    <p>Most lamps are on a timer: on at 5:30 AM, then again at 4:00 PM if they're off. Say "Alexa, turn all the lights off" when you're ready for them off, or tap your phone on the NFC tags to run the same command.</p>
+    <div class="banner warn">Avoid manually flicking lamps on/off, it resets the automation. Regular wall switches are fine to use normally (bedroom and guest bedroom lights are manual).</div>
+    <div class="grid2">
+      <div class="minicard"><b>Living room</b>"Big lamp", "Tall lamp", "paper lamp", "corner light"</div>
+      <div class="minicard"><b>Kitchen/Dining</b>"Black lamp"</div>
+      <div class="minicard"><b>Master bedroom</b>"My light"</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>🚪 Restricted rooms</h2>
+    <p>Blue room: keep the door closed. Macki will find things to eat in there.</p>
+  </div>
+  <div class="card">
+    <h2>📶 Wi-Fi</h2>
+    <p>Details are on the fridge, or scan the QR code we've left out.</p>
+  </div>
+  <div class="card">
+    <h2>🗑️ Bins</h2>
+    <p><b>Bin day:</b> Thursday morning. <span class="editme">Check which bins are due that week, they rotate.</span></p>
+    <ul>
+      <li>Green bin (food scraps): kitchen counter, near the CD player</li>
+      <li>Regular bin, also kitchen counter: left side is general waste, right side is recycling</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>📺 TV</h2>
+    <p>If it struggles to connect to the internet, unplug it from the back, wait about 10 seconds, then plug it back in.</p>
+  </div>
+</section>
+
+<section id="panel-commands" class="panel">
+  <div class="card">
+    <h2>🔘 Tap to trigger</h2>
+    <p>These buttons run the same automations as the voice commands and NFC tags. Tap once, no need to hold.</p>
+    <div class="button-grid" id="buttonGrid"></div>
+  </div>
+</section>
+
+<section id="panel-notes" class="panel">
+  <div class="card">
+    <h2>📝 Anything else</h2>
+    <p class="editme">Space for anything that doesn't fit elsewhere, extra videos, one-off instructions, updated contacts, etc.</p>
+  </div>
+</section>
+`;
+
+/* ---------- Build the photo grid (owner upload tools included) ---------- */
+const ITEMS = [
+  {key:'lickymat', icon:'🧽', label:'Licky mat', sub:'red Kong or green headspace mat, peanut butter/yoghurt/blueberries/biscuits'},
+  {key:'kong', icon:'🔵', label:'Blue/red Kong toy', sub:'fill and freeze if you like'},
+  {key:'wobble', icon:'🟡', label:'Yellow/red wobble toy', sub:''},
+  {key:'tprolls', icon:'🧻', label:'Toilet paper rolls', sub:'stuff with treats, seal the ends'},
+  {key:'towel', icon:'🔷', label:'Dark blue towel', sub:'roll treats up inside'},
+  {key:'redball', icon:'🔴', label:'Red ball', sub:'with biscuits inside'},
+  {key:'bone', icon:'🦴', label:'Pork twist / rawhide bone', sub:''},
+  {key:'tub', icon:'📦', label:'Rectangular tub', sub:'the one with paper scraps, fill with biscuits/treats'}
+];
+document.getElementById('itemGrid').innerHTML = ITEMS.map(it => `
+  <div class="item-card">
+    ${itemPhotoDiv(it.key, it.icon)}
+    <div class="item-label">${it.label}${it.sub ? '<small>'+it.sub+'</small>' : ''}</div>
+    <button class="upload-btn" onclick="uploadItemPhoto('${it.key}', this)">📷 Get upload link</button>
+    <div class="upload-result" id="result-${it.key}"></div>
+  </div>
+`).join('');
+
+/* ---------- Build the house buttons ---------- */
+const BUTTONS = [
+  {key:'musicon', icon:'🎵', label:'Music On', style:'music'},
+  {key:'musicoff', icon:'🔇', label:'Music Off', style:'music'},
+  {key:'lightson', icon:'💡', label:'All Lights On', style:'lights'},
+  {key:'lightsoff', icon:'🌙', label:'All Lights Off', style:'lights'}
+];
+document.getElementById('buttonGrid').innerHTML = BUTTONS.map(b => `
+  <div class="house-btn-card">
+    <button class="house-btn ${b.style}" onclick="triggerHouseButton('${b.key}')" ${HOUSE_BUTTON_URLS[b.key] ? '' : 'disabled'}>${b.icon} ${b.label}</button>
+    <div class="house-btn-note">${HOUSE_BUTTON_URLS[b.key] ? '' : 'No link set yet, add it in HOUSE_BUTTON_URLS'}</div>
+  </div>
+`).join('');
+</script>
+
+</body>
+</html>
