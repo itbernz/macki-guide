@@ -255,9 +255,9 @@
   </div>
   <div class="quickfacts">
     <span class="qf-pill emergency" onclick="showTab('emergency')">🚨 Emergency info</span>
+    <span class="qf-pill" id="clockItaly">🇮🇹 Italy: --</span>
     <span class="qf-pill">📍 Vet: Morley Vet Centre</span>
     <span class="qf-pill">💊 Meds in the morning</span>
-    <span class="qf-pill">🧠 Separation anxiety, read Routine tab first</span>
   </div>
 </header>
 
@@ -319,6 +319,26 @@ function showTab(id){
   document.getElementById('btn-'+id).classList.add('active');
   window.scrollTo({top:0, behavior:'instant'});
 }
+
+/* ---------- Live clocks (Italy trip) ---------- */
+/* Change 'Europe/Rome' if we are somewhere else. Daylight saving is handled automatically. */
+const TRIP_TIMEZONE = 'Europe/Rome';
+const TRIP_LABEL = '🇮🇹 Italy';
+function clockText(tz){
+  try{
+    return new Intl.DateTimeFormat('en-AU', {
+      timeZone: tz, weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true
+    }).format(new Date()).replace(/\b(am|pm)\b/i, s => s.toUpperCase());
+  }catch(e){
+    return '--';
+  }
+}
+function updateClocks(){
+  const it = document.getElementById('clockItaly');
+  if(it) it.textContent = TRIP_LABEL + ': ' + clockText(TRIP_TIMEZONE);
+}
+updateClocks();
+setInterval(updateClocks, 10000);
 
 function scrollToTop(){
   window.scrollTo({top:0, behavior:'smooth'});
